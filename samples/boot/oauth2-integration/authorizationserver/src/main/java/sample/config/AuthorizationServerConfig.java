@@ -31,7 +31,10 @@ import org.springframework.security.oauth2.server.authorization.client.Registere
 import org.springframework.security.oauth2.server.authorization.client.RegisteredClientRepository;
 import org.springframework.security.provisioning.InMemoryUserDetailsManager;
 
+import java.util.ArrayList;
+import java.util.Set;
 import java.util.UUID;
+import java.util.function.Consumer;
 
 /**
  * @author Joe Grandja
@@ -54,6 +57,7 @@ public class AuthorizationServerConfig {
 				.scope("message.read")
 				.scope("message.write")
 				.build();
+
 		return new InMemoryRegisteredClientRepository(registeredClient);
 	}
 	// @formatter:on
@@ -74,4 +78,5 @@ public class AuthorizationServerConfig {
 		return new InMemoryUserDetailsManager(user);
 	}
 	// @formatter:on
+
 }
