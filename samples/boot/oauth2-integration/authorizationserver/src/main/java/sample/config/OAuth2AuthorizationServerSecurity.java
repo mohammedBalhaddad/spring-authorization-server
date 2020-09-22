@@ -1,6 +1,5 @@
 package sample.config;
 
-import org.springframework.core.annotation.Order;
 import org.springframework.http.HttpMethod;
 import org.springframework.security.config.annotation.authentication.builders.AuthenticationManagerBuilder;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
@@ -8,7 +7,6 @@ import org.springframework.security.config.annotation.web.configuration.WebSecur
 import org.springframework.security.config.annotation.web.configurers.oauth2.server.authorization.OAuth2AuthorizationServerConfigurer;
 import org.springframework.security.oauth2.server.authorization.web.OAuth2TokenEndpointFilter;
 import org.springframework.security.web.util.matcher.AntPathRequestMatcher;
-import org.springframework.security.web.util.matcher.OrRequestMatcher;
 import org.springframework.security.web.util.matcher.RequestMatcher;
 
 import java.util.Arrays;
@@ -26,11 +24,8 @@ public class OAuth2AuthorizationServerSecurity extends WebSecurityConfigurerAdap
 		OAuth2AuthorizationServerConfigurer<HttpSecurity> authorizationServerConfigurer =
 				new OAuth2AuthorizationServerConfigurer<>();
 
+		//ttp.requestMatcher(new OrRequestMatcher(authorizationServerConfigurer.getEndpointMatchers())); // will only pass these endpoints
 		//http.requestMatcher(new OrRequestMatcher(MyAllowedEndpoints())); // will only pass these endpoints
-		//http.requestMatcher(new OrRequestMatcher(authorizationServerConfigurer.getEndpointMatchers())); // will only pass these endpoints
-
-//		http.oauth2Login(oauth2 -> oauth2.loginPage("/login")
-//				);
 
 		http.authorizeRequests(authorizeRequests ->
 				authorizeRequests.antMatchers("/h2-console/**").permitAll()
@@ -38,12 +33,9 @@ public class OAuth2AuthorizationServerSecurity extends WebSecurityConfigurerAdap
 						.anyRequest().authenticated()
 		).apply(authorizationServerConfigurer);
 
-		http.formLogin(form -> form
-				.loginPage("/login").permitAll()
-		);
-		http.logout(logout -> logout.logoutRequestMatcher(new AntPathRequestMatcher("/logout"))); // allow all logout Methods (GET , POST , ...)
-		http.csrf(csrf -> csrf.ignoringRequestMatchers(tokenEndpointMatcher(),
-				new AntPathRequestMatcher("/h2-console/**", HttpMethod.POST.name())));
+		http.formLogin(form -> form.loginPage("/login").permitAll());
+		http.logout();
+		http.csrf(csrf -> csrf.ignoringRequestMatchers(tokenEndpointMatcher(),new AntPathRequestMatcher("/h2-console/**", HttpMethod.POST.name())));
 		http.headers().frameOptions().disable(); // for h2 console
 	}
 	// @formatter:on
