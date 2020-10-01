@@ -16,7 +16,8 @@
 package sample.config;
 
 import org.springframework.context.annotation.Bean;
-import org.springframework.context.annotation.Import;
+import org.springframework.security.config.annotation.web.WebSecurityConfigurer;
+import org.springframework.security.config.annotation.web.builders.WebSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.core.userdetails.User;
 import org.springframework.security.core.userdetails.UserDetails;
@@ -30,17 +31,13 @@ import org.springframework.security.oauth2.server.authorization.client.Registere
 import org.springframework.security.oauth2.server.authorization.client.RegisteredClientRepository;
 import org.springframework.security.provisioning.InMemoryUserDetailsManager;
 
-import java.util.ArrayList;
-import java.util.Set;
 import java.util.UUID;
-import java.util.function.Consumer;
 
 /**
  * @author Joe Grandja
  * @since 0.0.1
  */
 @EnableWebSecurity
-@Import(OAuth2AuthorizationServerConfiguration.class)
 public class AuthorizationServerConfig {
 
 	// @formatter:off
@@ -79,4 +76,11 @@ public class AuthorizationServerConfig {
 	}
 	// @formatter:on
 
+
+
+	// create bean for webSecurityConfigurer providing OAuth2AuthorizationServerSecurity
+	@Bean
+	public WebSecurityConfigurer<WebSecurity> defaultOAuth2AuthorizationServerSecurity() {
+		return new AuthorizationServerSecurity();
+	}
 }
