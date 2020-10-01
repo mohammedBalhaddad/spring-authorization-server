@@ -14,7 +14,11 @@ import org.springframework.security.web.util.matcher.RequestMatcher;
 
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
+import java.util.stream.Collector;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 public class AuthorizationServerSecurity extends OAuth2AuthorizationServerSecurity {
 
@@ -48,7 +52,8 @@ public class AuthorizationServerSecurity extends OAuth2AuthorizationServerSecuri
 	}
 
 	private List<RequestMatcher> getEndpointMatchers(){
-		List<RequestMatcher> list1 =  Arrays.asList(
+
+		List<RequestMatcher> loginEndpoints = Arrays.asList(
 				new AntPathRequestMatcher("/login"),
 				new AntPathRequestMatcher("/h2-console/**"),
 				new AntPathRequestMatcher("/js/**",HttpMethod.GET.name()),
@@ -57,20 +62,10 @@ public class AuthorizationServerSecurity extends OAuth2AuthorizationServerSecuri
 				new AntPathRequestMatcher("/fonts/**",HttpMethod.GET.name()),
 				new AntPathRequestMatcher("/vendor/**"));
 
-		List<RequestMatcher> list2 = authorizationServerConfigurer.getEndpointMatchers();
-
-		ArrayList<RequestMatcher> arr = new ArrayList<>();
-
-		arr.addAll(list1);
-		arr.addAll(list2);
-
-
-		System.out.println(list1);
-		System.out.println(list2);
-		System.out.println(arr);
-
-
-		return arr ;
+		return Stream.concat(
+				loginEndpoints.stream(),
+				authorizationServerConfigurer.getEndpointMatchers().stream()
+		).collect(Collectors.toList());
 	}
 
 
