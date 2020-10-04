@@ -22,45 +22,71 @@ import java.util.stream.Stream;
 
 public class AuthorizationServerSecurity extends OAuth2AuthorizationServerSecurity {
 
+
+
+	private static final String H2_ANT_PATH = "/h2-console/**" ;
+	private static final String JS_ANT_PATH = "/js/**" ;
+	private static final String CSS_ANT_PATH = "/css/**" ;
+	private static final String IMG_ANT_PATH = "/images/**" ;
+	private static final String FONT_ANT_PATH = "/fonts/**" ;
+	private static final String VNDR_ANT_PATH = "/vendor/**" ;
+
+	private static final String LOGIN_PATH = "/login" ;
+	private static final String LOGOUT_PATH = "/logout" ;
+
 	private OAuth2AuthorizationServerConfigurer<HttpSecurity> authorizationServerConfigurer;
 
 
 	@Override
 	protected void configure(HttpSecurity http) throws Exception {
 		authorizationServerConfigurer = new OAuth2AuthorizationServerConfigurer<>();
-		http.requestMatcher(
-				new OrRequestMatcher(getEndpointMatchers())); // will only pass these endpoints
 
-		http.authorizeRequests(authorizeRequests ->
-				authorizeRequests.antMatchers("/h2-console/**").permitAll()
-						.antMatchers("/js/**","/css/**","/images/**","/fonts/**","/vendor/**").permitAll()
+		http
+				.requestMatcher( // will only pass these endpoints
+						new OrRequestMatcher( getAllEndpointsMatchers() )
+				)
+				.authorizeRequests(authorizeRequests -> authorizeRequests
+						.antMatchers(H2_ANT_PATH , JS_ANT_PATH , CSS_ANT_PATH ,
+								IMG_ANT_PATH , FONT_ANT_PATH , VNDR_ANT_PATH , LOGIN_PATH ).permitAll()
 						.anyRequest().authenticated()
-		).apply(authorizationServerConfigurer);
+				)
+				.formLogin(form -> form
+						.loginPage(LOGIN_PATH)
+				)
+				.logout(logout -> logout
+						.logoutRequestMatcher( new AntPathRequestMatcher(LOGOUT_PATH) ) // allow all logout Methods (GET , POST , ...)
+				)
+				.csrf(csrf -> csrf
+						.ignoringRequestMatchers(
+							tokenEndpointMatcher(),
+							new AntPathRequestMatcher(H2_ANT_PATH, HttpMethod.POST.name()) // Temp : for h2 console
+						)
+				)
+				.headers(headers -> headers
+						.frameOptions().disable() // Temp : for h2 console
+				)
+				.apply(authorizationServerConfigurer);
 
-		http.formLogin(form -> form.loginPage("/login").permitAll());
-		http.logout(logout -> logout.logoutRequestMatcher(new AntPathRequestMatcher("/logout"))); // allow all logout Methods (GET , POST , ...)
-		http.csrf(csrf -> csrf.ignoringRequestMatchers(tokenEndpointMatcher(),
-				new AntPathRequestMatcher("/h2-console/**", HttpMethod.POST.name())));
-		http.headers().frameOptions().disable(); // for h2 console
 	}
 
 
-	private static RequestMatcher tokenEndpointMatcher() {
+	private RequestMatcher tokenEndpointMatcher() {
 		return new AntPathRequestMatcher(
 				OAuth2TokenEndpointFilter.DEFAULT_TOKEN_ENDPOINT_URI,
-				HttpMethod.POST.name());
+				HttpMethod.POST.name()
+		);
 	}
 
-	private List<RequestMatcher> getEndpointMatchers(){
+	private List<RequestMatcher> getAllEndpointsMatchers(){
 
 		List<RequestMatcher> loginEndpoints = Arrays.asList(
-				new AntPathRequestMatcher("/login"),
-				new AntPathRequestMatcher("/h2-console/**"),
-				new AntPathRequestMatcher("/js/**",HttpMethod.GET.name()),
-				new AntPathRequestMatcher("/css/**",HttpMethod.GET.name()),
-				new AntPathRequestMatcher("/images/**",HttpMethod.GET.name()),
-				new AntPathRequestMatcher("/fonts/**",HttpMethod.GET.name()),
-				new AntPathRequestMatcher("/vendor/**"));
+				new AntPathRequestMatcher(LOGIN_PATH),
+				new AntPathRequestMatcher(H2_ANT_PATH), // Temp : for h2 console
+				new AntPathRequestMatcher(JS_ANT_PATH,HttpMethod.GET.name()),
+				new AntPathRequestMatcher(CSS_ANT_PATH,HttpMethod.GET.name()),
+				new AntPathRequestMatcher(IMG_ANT_PATH,HttpMethod.GET.name()),
+				new AntPathRequestMatcher(FONT_ANT_PATH,HttpMethod.GET.name()),
+				new AntPathRequestMatcher(VNDR_ANT_PATH));
 
 		return Stream.concat(
 				loginEndpoints.stream(),
