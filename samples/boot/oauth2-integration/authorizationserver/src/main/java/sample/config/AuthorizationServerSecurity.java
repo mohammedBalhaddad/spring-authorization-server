@@ -20,7 +20,7 @@ import java.util.stream.Collector;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
-public class AuthorizationServerSecurity extends WebSecurityConfigurerAdapter {
+public class AuthorizationServerSecurity extends OAuth2AuthorizationServerSecurity {
 
 
 
@@ -58,8 +58,7 @@ public class AuthorizationServerSecurity extends WebSecurityConfigurerAdapter {
 				)
 				.csrf(csrf -> csrf
 						.ignoringRequestMatchers(
-							tokenEndpointMatcher(),
-							new AntPathRequestMatcher(H2_ANT_PATH, HttpMethod.POST.name()) // Temp : for h2 console
+								getCsrfTokenEndpointMatcher()
 						)
 				)
 				.headers(headers -> headers
@@ -70,11 +69,11 @@ public class AuthorizationServerSecurity extends WebSecurityConfigurerAdapter {
 	}
 
 
-	private RequestMatcher tokenEndpointMatcher() {
-		return new AntPathRequestMatcher(
-				OAuth2TokenEndpointFilter.DEFAULT_TOKEN_ENDPOINT_URI,
-				HttpMethod.POST.name()
-		);
+	private RequestMatcher [] getCsrfTokenEndpointMatcher() {
+		return Stream.concat(
+			authorizationServerConfigurer.getEndpointMatchers().stream(),
+			Stream.of(new AntPathRequestMatcher(H2_ANT_PATH, HttpMethod.POST.name()))
+		).toArray(RequestMatcher[]::new);
 	}
 
 	private List<RequestMatcher> getAllEndpointsMatchers(){
