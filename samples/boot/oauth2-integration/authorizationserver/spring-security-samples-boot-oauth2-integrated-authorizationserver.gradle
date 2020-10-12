@@ -9,4 +9,5 @@ dependencies {
 	implementation 'com.h2database:h2:1.4.200'
 	compile project(':spring-security-oauth2-authorization-server')
 	compileOnly("org.springframework.boot:spring-boot-devtools")
+	compile 'org.projectlombok:lombok:1.18.14'
 }
